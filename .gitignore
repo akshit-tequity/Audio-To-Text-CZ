@@ -1,0 +1,10 @@
+node_modules/
+.env
+tmp/
+uploads/
+venv/
+__pycache__/
+*.pyc
+.DS_Store
+*.log
+.claude/settings.local.json
