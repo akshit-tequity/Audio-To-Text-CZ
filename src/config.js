@@ -13,7 +13,8 @@ const config = {
 
   whisper: {
     model: process.env.WHISPER_MODEL || 'small',
-    computeType: process.env.WHISPER_COMPUTE_TYPE || 'int8',
+    device: process.env.WHISPER_DEVICE || 'auto',
+    computeType: process.env.WHISPER_COMPUTE_TYPE || 'default',
     language: process.env.WHISPER_LANGUAGE || 'auto',
     task: process.env.WHISPER_TASK || 'translate',
     initialPrompt: process.env.WHISPER_INITIAL_PROMPT || '',

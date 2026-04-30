@@ -16,6 +16,7 @@ import json
 import sys
 import time
 
+import ctranslate2
 from faster_whisper import WhisperModel
 
 
@@ -23,9 +24,27 @@ def log(msg: str) -> None:
     print(msg, file=sys.stderr, flush=True)
 
 
+def resolve_device(requested: str) -> str:
+    """auto → cuda if a GPU is visible, otherwise cpu."""
+    if requested != "auto":
+        return requested
+    try:
+        return "cuda" if ctranslate2.get_cuda_device_count() > 0 else "cpu"
+    except Exception:
+        return "cpu"
+
+
+def resolve_compute_type(device: str, requested: str) -> str:
+    """default → int8 on CPU, float16 on GPU. Honors explicit values."""
+    if requested != "default":
+        return requested
+    return "float16" if device == "cuda" else "int8"
+
+
 def transcribe(
     audio_path: str,
     model_name: str,
+    device: str,
     compute_type: str,
     language: str,
     task: str,
@@ -33,9 +52,11 @@ def transcribe(
     hotwords: str,
     beam_size: int,
 ) -> dict:
-    log(f"loading model={model_name} compute={compute_type}")
+    resolved_device = resolve_device(device)
+    resolved_compute = resolve_compute_type(resolved_device, compute_type)
+    log(f"loading model={model_name} device={resolved_device} compute={resolved_compute}")
     t0 = time.time()
-    model = WhisperModel(model_name, device="cpu", compute_type=compute_type)
+    model = WhisperModel(model_name, device=resolved_device, compute_type=resolved_compute)
     log(f"model loaded in {time.time() - t0:.1f}s")
 
     lang_arg = None if language in (None, "", "auto") else language
@@ -87,7 +108,8 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("audio_path")
     parser.add_argument("--model", default="small")
-    parser.add_argument("--compute-type", default="int8")
+    parser.add_argument("--device", default="auto", choices=["auto", "cuda", "cpu"])
+    parser.add_argument("--compute-type", default="default")
     parser.add_argument("--language", default="auto")
     parser.add_argument("--task", default="transcribe", choices=["transcribe", "translate"])
     parser.add_argument("--initial-prompt", default="")
@@ -99,6 +121,7 @@ def main() -> int:
         result = transcribe(
             args.audio_path,
             args.model,
+            args.device,
             args.compute_type,
             args.language,
             args.task,
