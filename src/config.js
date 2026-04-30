@@ -9,6 +9,18 @@ const config = {
 
   anthropicApiKey: process.env.ANTHROPIC_API_KEY,
 
+  summarizer: {
+    provider: (process.env.SUMMARIZER_PROVIDER || 'ollama').toLowerCase(),
+    ollama: {
+      baseUrl: process.env.OLLAMA_URL || 'http://127.0.0.1:11434',
+      model: process.env.OLLAMA_MODEL || 'llama3.2:3b',
+      timeoutMs: parseInt(process.env.OLLAMA_TIMEOUT_MS || '120000', 10),
+    },
+    anthropic: {
+      model: process.env.ANTHROPIC_SUMMARY_MODEL || 'claude-haiku-4-5',
+    },
+  },
+
   transcriptionProvider: (process.env.TRANSCRIPTION_PROVIDER || 'whisper').toLowerCase(),
 
   whisper: {
@@ -45,7 +57,9 @@ const config = {
 function assertConfig() {
   const missing = [];
   if (!config.mongoUri) missing.push('MONGODB_URI');
-  if (!config.anthropicApiKey) missing.push('ANTHROPIC_API_KEY');
+  if (config.summarizer.provider === 'anthropic' && !config.anthropicApiKey) {
+    missing.push('ANTHROPIC_API_KEY');
+  }
   if (config.transcriptionProvider === 'elevenlabs' && !config.elevenlabs.apiKey) {
     missing.push('ELEVENLABS_API_KEY');
   }
