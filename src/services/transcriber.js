@@ -9,6 +9,7 @@ function transcribeAudio(audioPath) {
       config.whisperRunner,
       audioPath,
       '--model', config.whisper.model,
+      '--device', config.whisper.device,
       '--compute-type', config.whisper.computeType,
       '--language', config.whisper.language,
       '--task', config.whisper.task,
@@ -24,7 +25,7 @@ function transcribeAudio(audioPath) {
     const start = log.now();
     log.info(
       'whisper',
-      `start model=${config.whisper.model} lang=${config.whisper.language} task=${config.whisper.task} ` +
+      `start model=${config.whisper.model} device=${config.whisper.device} lang=${config.whisper.language} task=${config.whisper.task} ` +
       `prompt=${config.whisper.initialPrompt ? 'set' : 'none'} hotwords=${config.whisper.hotwords ? 'set' : 'none'}`
     );
 
